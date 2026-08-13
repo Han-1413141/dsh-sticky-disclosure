@@ -1,0 +1,48 @@
+{
+  "name": "dsh-sticky-disclosure",
+  "version": "0.1.0",
+  "description": "DSH Web client plugin: pins expanded collapsible tags (Think / tool cards / command cards...) to the top of the conversation viewport once their header scrolls out of view, with a collapse hotkey (Ctrl+Alt+C).",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Han-1413141/dsh-sticky-disclosure.git"
+  },
+  "homepage": "https://github.com/Han-1413141/dsh-sticky-disclosure#readme",
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "client-plugin",
+    "ui",
+    "sticky",
+    "disclosure",
+    "collapsible"
+  ],
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": []
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}
