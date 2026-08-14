@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
+[![awesome · DSH plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 English | [中文](README.md)
 
 ![Promo art: whale girl collapsing an expanded Think with her gourd](docs/assets/promo.webp)
@@ -73,14 +74,36 @@ window.dshStickyDisclosure.hotkey()                                             
 
 ## Install
 
-> Requires: DeepSeek Harness (dsh CLI) with the Web surface. The plugin activates with `dsh web`.
+> Requires: Node.js ≥ 20 + DeepSeek Harness (a version with the `dsh plugin` command; `npm install -g @deepseek-ai/dsh`). The plugin activates with `dsh web`.
 
-### Option 1: `dsh plugin` (requires pnpm)
+### Option 0: one-click (recommended, no clone needed)
+
+**PowerShell one-click script** (copy the whole line and paste; pnpm is provisioned automatically, git is auto-detected):
+
+```powershell
+irm https://raw.githubusercontent.com/Han-1413141/dsh-sticky-disclosure/main/install.ps1 | iex
+```
+
+**Or a plain command line** (machine must already have pnpm and git):
+
+```bash
+dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure
+```
+
+Without git, use the GitHub archive tarball (update by remove-then-add):
+
+```bash
+dsh plugin --profile web add https://github.com/Han-1413141/dsh-sticky-disclosure/archive/refs/heads/main.tar.gz
+```
+
+### Option 1: local development (`dsh plugin` + symlink)
 
 From this repository's **parent directory** (relative paths get anchored to the invoking directory):
 
 ```bash
-# development (symlink; edit lib/client.js, refresh the page, done):
+git clone https://github.com/Han-1413141/dsh-sticky-disclosure.git
+cd <parent of the clone>
+# symlink; edit lib/client.js, refresh the page, done:
 dsh plugin --profile web add link:./dsh-sticky-disclosure
 # or a fixed install:
 # dsh plugin --profile web add file:./dsh-sticky-disclosure
@@ -115,12 +138,14 @@ dsh --profile web --dump-config | findstr sticky-disclosure
 
 On the page, the "collapse all" pill at the bottom-right of the chat area means the plugin is active.
 
-### Uninstall
+### Update / Uninstall
 
-- Option 1: `dsh plugin --profile web remove dsh-sticky-disclosure`
-- Option 2: remove the entries from `package.json` (`dependencies`/`bundles`) and delete the `profiles\web\node_modules\dsh-sticky-disclosure` junction
+```bash
+dsh plugin --profile web update dsh-sticky-disclosure  # update to the latest commit (git form; or re-run the one-click script)
+dsh plugin --profile web remove dsh-sticky-disclosure  # uninstall
+```
 
-Then restart `dsh web`.
+Manual: remove the entries from `package.json` (`dependencies`/`bundles`) and delete the `profiles\web\node_modules\dsh-sticky-disclosure` junction, then restart `dsh web`.
 
 ## Tuning
 
@@ -159,7 +184,10 @@ Coverage: pill presence and count, one-click collapse-all (visible sections and 
 
 ```
 dsh-sticky-disclosure/
-├── .github/workflows/test.yml   # CI: Playwright verification suite
+├── .github/workflows/
+│   ├── test.yml                 # CI: Playwright verification suite
+│   └── install-smoke.yml        # CI: one-click install smoke test (Windows + Linux)
+├── install.ps1                  # one-click install/update script (irm … | iex)
 ├── package.json                 # dsh.client (platform: web) + dsh.bundle declaration
 ├── cordis.patch.yml             # host-tree entry row (bundle patch)
 ├── lib/

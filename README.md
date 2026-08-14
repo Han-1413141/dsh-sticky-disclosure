@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
+[![awesome · DSH plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 [English](README.en.md) | 中文
 
 ![宣传图：鲸鱼娘用葫芦收起展开的 Think](docs/assets/promo.webp)
@@ -72,16 +73,38 @@ window.dshStickyDisclosure.hotkey()                                             
 
 ## 安装
 
-> 需求：DeepSeek Harness（dsh CLI）+ Web 前端。插件随 `dsh web` 启动。
+> 需求：Node.js ≥ 20 + DeepSeek Harness（带 `dsh plugin` 命令的版本，`npm install -g @deepseek-ai/dsh`）。插件随 `dsh web` 启动。
 
-### 方式一：`dsh plugin`（需要机器上有 pnpm）
+### 方式〇：一键安装（推荐，无需克隆仓库）
+
+**PowerShell 一键脚本**（复制整行粘贴回车；自动补齐 pnpm、自动探测 git）：
+
+```powershell
+irm https://raw.githubusercontent.com/Han-1413141/dsh-sticky-disclosure/main/install.ps1 | iex
+```
+
+**或直接命令行**（机器上需已有 pnpm 与 git）：
+
+```bash
+dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure
+```
+
+没有 git 时可用 GitHub 打包直链（更新时先 remove 再 add）：
+
+```bash
+dsh plugin --profile web add https://github.com/Han-1413141/dsh-sticky-disclosure/archive/refs/heads/main.tar.gz
+```
+
+### 方式一：本地开发（`dsh plugin` + 符号链接）
 
 在本仓库**父目录**执行（相对路径会被锚定到调用目录）：
 
 ```bash
-# 开发调试（符号链接，改 lib/client.js 后刷新页面即生效）：
+git clone https://github.com/Han-1413141/dsh-sticky-disclosure.git
+cd <克隆目录的父目录>
+# 符号链接,改 lib/client.js 后刷新页面即生效:
 dsh plugin --profile web add link:./dsh-sticky-disclosure
-# 或固定安装：
+# 或固定安装:
 # dsh plugin --profile web add file:./dsh-sticky-disclosure
 ```
 
@@ -114,12 +137,14 @@ dsh --profile web --dump-config | findstr sticky-disclosure
 
 页面加载后，聊天区右下角出现「全部收起」药丸按钮即表示插件已激活。
 
-### 卸载
+### 更新 / 卸载
 
-- 方式一：`dsh plugin --profile web remove dsh-sticky-disclosure`
-- 方式二：从 `package.json` 的 `dependencies`/`bundles` 删掉对应条目，删除 `profiles\web\node_modules\dsh-sticky-disclosure` 联接
+```bash
+dsh plugin --profile web update dsh-sticky-disclosure  # 更新到最新提交(git 方式;或重跑一键脚本)
+dsh plugin --profile web remove dsh-sticky-disclosure  # 卸载
+```
 
-然后重启 `dsh web`。
+手工方式：从 `package.json` 的 `dependencies`/`bundles` 删掉对应条目，删除 `profiles\web\node_modules\dsh-sticky-disclosure` 联接，然后重启 `dsh web`。
 
 ## 微调
 
@@ -158,9 +183,12 @@ python test/verify.py   # 需要 Python 3 + playwright（python -m playwright in
 
 ```
 dsh-sticky-disclosure/
-├── .github/workflows/test.yml   # CI：Playwright 验证套件
-├── package.json                 # dsh.client(platform: web) + dsh.bundle 声明
-├── cordis.patch.yml             # 宿主树入口行（bundle patch）
+├── .github/workflows/
+│   ├── test.yml             # CI:Playwright 验证套件
+│   └── install-smoke.yml    # CI:一键安装冒烟验证(Windows + Linux)
+├── install.ps1              # 一键安装/更新脚本(irm … | iex)
+├── package.json             # dsh.client(platform: web) + dsh.bundle 声明
+├── cordis.patch.yml         # 宿主树入口行(bundle patch)
 ├── lib/
 │   ├── index.js                 # 宿主半身：惰性标记插件（无行为）
 │   └── client.js                # 浏览器半身：自包含 bundle（__ModuleLoader__ handoff）
