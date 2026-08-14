@@ -4,6 +4,8 @@
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
 English | [中文](README.md)
 
+![Promo art: whale girl collapsing an expanded Think with her gourd](docs/assets/promo.webp)
+
 A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsible section in the conversation in one click** — `Think` reasoning rows, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` — via an always-visible pill with a live count and a **customizable hotkey**.
 
 ![demo](docs/assets/demo.gif)

@@ -4,6 +4,8 @@
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
 [English](README.en.md) | 中文
 
+![宣传图：鲸鱼娘用葫芦收起展开的 Think](docs/assets/promo.webp)
+
 DSH Web 客户端插件：**一键收起会话里所有展开的可折叠区块**（Think 思考行、工具卡片、命令卡片、上下文注入行等），带实时计数的常驻按钮 + **可自定义的快捷键**。
 
 ![演示动画](docs/assets/demo.gif)
