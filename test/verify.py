@@ -56,6 +56,13 @@ def main():
         check("plugin registered", eval_js("window.__plugin && window.__plugin.name") == "sticky-disclosure")
         check("style tag injected with data-plugin", eval_js(
             "!!document.querySelector('style[data-plugin=\"dsh-sticky-disclosure\"]')"))
+        initial_control = eval_js("""(() => {
+          const c = document.querySelector('[data-sticky-disclosure-control]');
+          return c ? { count: c.getAttribute('data-count'), text: c.textContent.trim() } : null;
+        })()""")
+        check("control pill visible on load", initial_control is not None, str(initial_control))
+        check("control count = expanded rows (4)", initial_control is not None and initial_control["count"] == "4", str(initial_control))
+        check("debug handle exposed", eval_js("window.dshStickyDisclosure && window.dshStickyDisclosure.version") == "0.2.0")
 
         # --- 2. scroll the first expanded block off the top -----------------
         set_scroll(400)
@@ -104,24 +111,14 @@ def main():
         check("chip click collapsed b1", before["expanded"] and not after["expanded"], f"{before} -> {after}")
         check("exactly one chip removed after collapse", len(chip_labels()) == 2, str(chip_labels()))
 
-        # --- 5. hotkey collapses every off-screen expanded section ----------
+        # --- 5. hotkey collapses EVERY expanded section (visible included) --
         page.keyboard.press("Control+Alt+C")
         page.wait_for_timeout(150)
-        b3, b4 = row_status("b3"), row_status("b4")
+        b3, b4, b5h = row_status("b3"), row_status("b4"), row_status("b5")
         check("hotkey collapsed b3", not b3["expanded"], str(b3))
         check("hotkey collapsed b4 (button-toggle row)", not b4["expanded"], str(b4))
-        remaining = chip_labels()
-        check("no chip remains for the rows the hotkey collapsed",
-              "pwsh" not in remaining and "compact" not in remaining, str(remaining))
-        # Collapsing shifted the layout (scrollTop clamps), so an expanded row
-        # whose header is now off-top may legitimately be re-pinned.
-        b5s = row_status("b5")
-        if remaining:
-            check("any residual chip matches a row that is off-top now",
-                  remaining == ["Think"] and b5s["expanded"] and b5s["offTop"],
-                  f"{remaining} {b5s}")
-        else:
-            check("no residual chip", True)
+        check("hotkey collapsed visible b5 too", not b5h["expanded"], str(b5h))
+        check("no chips remain after hotkey", dock_count() == 0 and len(chip_labels()) == 0)
 
         # --- 5b. hotkey works while the composer input is focused -----------
         eval_js("""(() => {
@@ -156,12 +153,37 @@ def main():
         check("chip disappears when header visible again, content stays expanded",
               b5["expanded"] and not b5["offTop"], str(b5))
 
-        # --- 7. disposal restores everything --------------------------------
+        # --- 7. floating collapse-all pill -----------------------------------
+        ctrl = eval_js("""(() => {
+          const c = document.querySelector('[data-sticky-disclosure-control]');
+          if (!c) return null;
+          const s = c.getBoundingClientRect();
+          const sp = document.querySelector('[data-conversation-scroll]').getBoundingClientRect();
+          return { text: c.textContent.trim(), count: c.getAttribute('data-count'),
+                   atBottomRight: Math.abs((sp.bottom - 16) - s.bottom) < 20 };
+        })()""")
+        check("control pill present, count matches expanded rows", ctrl is not None and ctrl["count"] == "1", str(ctrl))
+        check("control pill pinned to scrollport bottom-right", ctrl is not None and ctrl["atBottomRight"], str(ctrl))
+        eval_js("document.querySelector('[data-sticky-disclosure-control]').click()")
+        page.wait_for_timeout(200)
+        b5c = row_status("b5")
+        check("control pill collapses all expanded", not b5c["expanded"], str(b5c))
+        check("control count resets to 0", eval_js(
+            "document.querySelector('[data-sticky-disclosure-control]').getAttribute('data-count')") == "0")
+
+        # --- 8. disposal restores everything --------------------------------
+        eval_js("""(() => {
+          const row = document.querySelector('#b5 [data-disclosure-row]');
+          if (!row.parentElement.hasAttribute('data-open')) row.click();
+        })()""")  # re-expand so a chip exists at disposal time
+        page.wait_for_timeout(120)
         set_scroll(2700)
         page.wait_for_function("document.querySelectorAll('[data-sticky-disclosure-chip]').length === 1", timeout=2000)
         eval_js("window.__effectHandle.dispose()")
         page.wait_for_timeout(120)
         check("dispose removes dock and chips", dock_count() == 0)
+        check("dispose removes control pill", eval_js(
+            "!document.querySelector('[data-sticky-disclosure-control]')"))
         check("dispose removes injected style", eval_js(
             "!document.querySelector('style[data-plugin=\"dsh-sticky-disclosure\"]')"))
 

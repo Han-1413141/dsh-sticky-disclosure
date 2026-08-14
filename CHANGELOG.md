@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-08-14
+
+### Changed
+
+- **Always-visible presence**: a floating "collapse all" pill now sits at the bottom-right corner of the conversation scrollport with a live count of expanded sections. It appears the moment the plugin loads, making "is the plugin active?" answerable at a glance — no scrolling required.
+- **Hotkey semantics**: `Ctrl+Alt+C` (and the pill) now collapse **every** expanded section in the conversation — visible ones included — so pressing the hotkey always has an immediately observable effect.
+- `console.info("[dsh-sticky-disclosure] applied …")` on apply, for instant verification in DevTools.
+- Debug handle `window.dshStickyDisclosure` (`version`, `expanded()`, `affixed()`).
+
+### Fixed
+
+- Hotkey previously did nothing while the composer input held focus (the default state); it now works there, remaining IME/AltGr-safe.
+
 ## [0.1.0] - 2026-06-17
 
 Initial release.

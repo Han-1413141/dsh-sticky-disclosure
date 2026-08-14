@@ -4,7 +4,7 @@
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
 English | [中文](README.md)
 
-A DeepSeek Harness (DSH) Web client plugin: when an **expanded collapsible tag** — the `Think` reasoning row, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` in the conversation flow — **scrolls out of the top of the chat viewport, its header is pinned to the viewport's top edge**, so you can collapse it at any time. A single hotkey collapses all off-screen expanded sections at once.
+A DeepSeek Harness (DSH) Web client plugin: when an **expanded collapsible tag** — the `Think` reasoning row, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` in the conversation flow — **scrolls out of the top of the chat viewport, its header is pinned to the viewport's top edge**, so you can collapse it at any time. A floating pill with a live count and a hotkey collapse **every** expanded section at once.
 
 ![affix chips](test/shot-chips.png)
 
@@ -14,18 +14,20 @@ The collapse control of a Think row or tool card *is* its header row. When the s
 
 ## Behavior
 
+- **Always-visible "collapse all" pill** at the bottom-right corner of the conversation scrollport, with a live count of expanded sections (`·N`). It appears the moment the plugin loads — if you can see it, the plugin is live. Clicking it collapses every expanded section in the conversation, visible or not.
 - For every expanded disclosure (`[data-disclosure-row]` under a `data-open` root) inside the conversation scrollport (`[data-conversation-scroll]`), once its header row fully slides past the scrollport's top edge, an affix chip (a small pill button) appears at the top of the scrollport, labelled with the section title (`Think`, the tool name, …).
 - **Clicking a chip collapses the original section** by dispatching a real `click` on the original header — it goes through the app's own React state, exactly as if you clicked the header itself. The chip disappears immediately.
 - Scrolling the header **back into view** removes the chip (the content stays expanded).
 - Multiple off-screen sections form a row in **document order** (wrapping when needed), never overlapping.
-- **Hotkey `Ctrl+Alt+C` (macOS `⌘+Option+C`)** collapses every off-screen expanded section at once.
+- **Hotkey `Ctrl+Alt+C` (macOS `⌘+Option+C`)** collapses **every** expanded section in the conversation at once — visible ones included, so the effect is always observable on the spot.
+- On apply, the plugin logs `console.info("[dsh-sticky-disclosure] applied …")` and exposes `window.dshStickyDisclosure` (`expanded()` / `affixed()`) for support.
 - Streaming output, session switches, and expand/collapse state changes are tracked via `MutationObserver` + scroll listening; plugin disposal (HMR/stop) restores everything.
 
 ### Stacking
 
-- The dock is fixed to the top edge of the conversation scrollport, horizontally aligned with the content's 32px padding.
+- The dock is fixed to the top edge of the conversation scrollport, horizontally aligned with the content's 32px padding; the collapse-all pill is fixed to the scrollport's bottom-right corner.
 - `z-index: 15`: above chat content (0–6), below the app's overlay layer (20) and all dialogs/popups (100/1000-tier) — it never covers permission prompts, settings panels, or onboarding masks.
-- Chips use the app's design tokens (`--dsw-*`: background, border, shadow, type), so they follow dark/light themes and fonts automatically, with an entrance animation that respects `prefers-reduced-motion`.
+- Everything uses the app's design tokens (`--dsw-*`: background, border, shadow, type), so it follows dark/light themes and fonts automatically, with an entrance animation that respects `prefers-reduced-motion`.
 
 ### Hotkey design
 
@@ -64,10 +66,10 @@ dsh plugin --profile web add link:./dsh-sticky-disclosure
 
 ### Activate
 
-Plugin-set changes take effect on **restart** (a running server keeps its old graph):
+Plugin-set changes take effect on **restart** (a running server keeps its old graph). **The bundle itself is served `no-cache`**: after editing `lib/client.js`, a page refresh (Ctrl+F5) is enough to pick up the new code — no server restart needed.
 
 ```bash
-# stop the current dsh web, then start it again
+# after the initial install: stop the current dsh web, then start it again
 dsh web
 ```
 
@@ -76,6 +78,8 @@ Verify it entered the plugin graph (expect `id: sticky-disclosure` and `name: ds
 ```bash
 dsh --profile web --dump-config | findstr sticky-disclosure
 ```
+
+On the page, the "collapse all" pill at the bottom-right of the chat area means the plugin is active.
 
 ### Uninstall
 
@@ -95,6 +99,7 @@ All behavior parameters live in the constants block at the top of `lib/client.js
 | `DOCK_TOP_GAP` | `8` | Gap between the scrollport's top edge and the first chip row |
 | `DOCK_Z_INDEX` | `15` | Stacking level (must stay below the app overlay layer at z-20) |
 | `CHIP_MAX_WIDTH` | `260` | Max width of one chip (truncated beyond that) |
+| `CONTROL_INSET` | `16` | Inset of the collapse-all pill from the scrollport's bottom-right corner |
 | `EDGE_TOLERANCE` | `0.5` | Tolerance in px for "fully slid off the top edge" |
 
 To change the hotkey, edit the modifier checks and `event.code` in `onKeyDown` (`lib/client.js`).
@@ -108,9 +113,9 @@ python test/verify.py   # needs Python 3 + playwright (python -m playwright inst
 `test/` contains:
 
 - `mock.html` — a static harness reproducing the DSH DOM contract (`DisclosureRow` structure + the `[data-conversation-scroll]` scrollport);
-- `verify.py` — a Playwright verification script (27 assertions).
+- `verify.py` — a Playwright verification script (35 assertions).
 
-Coverage: chip appears after sliding off the top, dock position/gap/z-index (15), document order, click-to-collapse, `Ctrl+Alt+C` collapse-all (including while an input is focused), chip disappears when the header becomes visible again (content stays expanded), composer panels never pinned, full restore on disposal.
+Coverage: always-visible pill and its count, chip appears after sliding off the top, dock position/gap/z-index (15), document order, click-to-collapse, `Ctrl+Alt+C` collapse-all (including visible sections and input-focused scenarios), pill click-to-collapse-all, chip disappears when the header becomes visible again (content stays expanded), composer panels never pinned, full restore on disposal.
 
 > CI (`.github/workflows/test.yml`) runs the same suite on every push.
 
@@ -132,7 +137,7 @@ dsh-sticky-disclosure/
 │   └── client.js                # browser half: self-contained bundle (__ModuleLoader__ handoff)
 ├── test/
 │   ├── mock.html                # static harness reproducing the DSH DOM contract
-│   ├── verify.py                # Playwright verification script (27 assertions)
+│   ├── verify.py                # Playwright verification script (35 assertions)
 │   └── shot-chips.png           # screenshot (mock environment)
 ├── docs/ARCHITECTURE.md         # architecture and implementation details
 ├── README.md / README.en.md

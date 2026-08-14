@@ -4,7 +4,7 @@
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
 [English](README.en.md) | 中文
 
-DSH Web 客户端插件：**展开中的可折叠标签（Think 思考行、工具卡片、命令卡片、上下文注入行等所有 DisclosureRow）在滑出聊天视口顶部之后，会把标题“钉”在视口顶部**，让你随时可以收起它；并提供**一键全部收起**的快捷键。
+DSH Web 客户端插件：**展开中的可折叠标签（Think 思考行、工具卡片、命令卡片、上下文注入行等所有 DisclosureRow）在滑出聊天视口顶部之后，会把标题“钉”在视口顶部**，让你随时可以收起它；并提供**一键全部收起**的快捷键与常驻「全部收起」按钮。
 
 ![affix chips 效果图](test/shot-chips.png)
 
@@ -14,18 +14,20 @@ Think 思考行、工具卡片等区块的收起按钮就是它的标题行。�
 
 ## 行为
 
+- **常驻「全部收起」按钮**：会话滚动区右下角一枚浮动小药丸，带实时计数（`·N` = 当前展开的区块数）。它随页面加载立即出现——**只要看到它，插件就活着**；点击它收起会话里所有展开的区块（可见与不可见一视同仁）。
 - 聊天流里的每个可折叠区块（`data-open` 根节点下的 `[data-disclosure-row]` 标题行）在**展开**状态下，一旦整行标题滑出会话滚动区（`[data-conversation-scroll]`）的上边缘，就会在滚动区顶部出现一枚 affix chip（小药丸按钮），显示该区块的标题（如 `Think`、工具名）。
 - **点击 chip = 收起原区块**：对原标题行派发真实 `click`，走应用自己的 React 状态，行为与点击原标题行完全一致；收起后 chip 立即消失。
 - 把标题**滚回可视区域**时 chip 自动消失（内容保持展开）。
 - 多个滑出的区块按**文档顺序**排成一行（超宽自动换行），互不遮挡。
-- **快捷键 `Ctrl+Alt+C`（macOS `⌘+Option+C`）**：一次性收起当前所有已滑出屏幕的展开区块。
+- **快捷键 `Ctrl+Alt+C`（macOS `⌘+Option+C`）**：一次性收起会话里**所有**展开区块（包括看得见的），按下立刻有可观察效果。
+- 插件加载时会打一条 `console.info("[dsh-sticky-disclosure] applied …")`，并提供调试句柄 `window.dshStickyDisclosure`（`expanded()` / `affixed()`）。
 - 流式输出、切换会话、展开/收起状态变化都由 `MutationObserver` + 滚动监听自动同步；插件卸载（HMR / 停用）时全部还原。
 
 ### 遮挡关系
 
-- dock 固定在会话滚动区的顶部边缘，水平对齐聊天内容的 32px 内边距。
+- dock 固定在会话滚动区的顶部边缘，水平对齐聊天内容的 32px 内边距；「全部收起」按钮固定在滚动区右下角。
 - `z-index: 15`：高于聊天内容（0–6），低于应用浮层（20）与所有弹窗/对话框（100/1000 级），因此**不会盖住权限弹窗、设置面板或欢迎遮罩**。
-- chip 全部使用应用设计令牌（`--dsw-*` 系列：背景、边框、阴影、字号），自动跟随深色/浅色主题与字体；带入场动画并尊重 `prefers-reduced-motion`。
+- 全部使用应用设计令牌（`--dsw-*` 系列：背景、边框、阴影、字号），自动跟随深色/浅色主题与字体；带入场动画并尊重 `prefers-reduced-motion`。
 
 ### 快捷键设计
 
@@ -64,10 +66,10 @@ dsh plugin --profile web add link:./dsh-sticky-disclosure
 
 ### 激活
 
-插件集合变化在**重启时生效**（运行中的服务保持旧图，不受影响）：
+插件集合变化在**重启时生效**（运行中的服务保持旧图，不受影响）。**插件 bundle 内容本身按 no-cache 提供**：改完 `lib/client.js` 后只需**刷新页面**（Ctrl+F5）即可拿到新代码，无需重启服务。
 
 ```bash
-# 停掉当前 dsh web 后重新启动
+# 首次安装后：停掉当前 dsh web 再启动
 dsh web
 ```
 
@@ -76,6 +78,8 @@ dsh web
 ```bash
 dsh --profile web --dump-config | findstr sticky-disclosure
 ```
+
+页面加载后，聊天区右下角出现「全部收起」药丸按钮即表示插件已激活。
 
 ### 卸载
 
@@ -95,6 +99,7 @@ dsh --profile web --dump-config | findstr sticky-disclosure
 | `DOCK_TOP_GAP` | `8` | chip 排距滚动区顶部的间距 |
 | `DOCK_Z_INDEX` | `15` | 遮挡层级（须低于应用浮层 z-20） |
 | `CHIP_MAX_WIDTH` | `260` | 单枚 chip 最大宽度（超出省略） |
+| `CONTROL_INSET` | `16` | 「全部收起」按钮距滚动区右下角的间距 |
 | `EDGE_TOLERANCE` | `0.5` | 「完全滑出」判定容差（px） |
 
 改快捷键判定：`lib/client.js` 中 `onKeyDown` 的修饰键与 `event.code` 判断。
@@ -108,9 +113,9 @@ python test/verify.py   # 需要 Python 3 + playwright（python -m playwright in
 `test/` 包含：
 
 - `mock.html` —— 复刻 DSH DOM 契约（`DisclosureRow` 结构 + `[data-conversation-scroll]` 滚动区）的静态测试台；
-- `verify.py` —— Playwright 验证脚本（27 项断言）。
+- `verify.py` —— Playwright 验证脚本（35 项断言）。
 
-覆盖：滑出顶部后出 chip、位置/间距/z-index(15)、文档顺序、点击收起、`Ctrl+Alt+C` 全部收起（含输入框聚焦场景）、滚回可见时 chip 消失（内容保持展开）、composer 内面板永不钉住、卸载全量还原。
+覆盖：常驻按钮与计数、滑出顶部后出 chip、位置/间距/z-index(15)、文档顺序、点击收起、`Ctrl+Alt+C` 全部收起（含可见区块与输入框聚焦场景）、按钮一键收起、滚回可见时 chip 消失（内容保持展开）、composer 内面板永不钉住、卸载全量还原。
 
 > 本仓库的 CI（`.github/workflows/test.yml`）在每次推送时运行同一套脚本。
 
@@ -132,7 +137,7 @@ dsh-sticky-disclosure/
 │   └── client.js                # 浏览器半身：自包含 bundle（__ModuleLoader__ handoff）
 ├── test/
 │   ├── mock.html                # 复刻 DSH DOM 契约的静态测试台
-│   ├── verify.py                # Playwright 验证脚本（27 项断言）
+│   ├── verify.py                # Playwright 验证脚本（35 项断言）
 │   └── shot-chips.png           # 效果截图（mock 环境）
 ├── docs/ARCHITECTURE.md         # 架构与实现细节
 ├── README.md / README.en.md
