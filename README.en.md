@@ -4,7 +4,7 @@
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
 English | [中文](README.md)
 
-A DeepSeek Harness (DSH) Web client plugin: when an **expanded collapsible tag** — the `Think` reasoning row, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` in the conversation flow — **scrolls out of the top of the chat viewport, its header is pinned to the viewport's top edge**, so you can collapse it at any time. An always-visible collapse-all pill and a **customizable hotkey** collapse every expanded section at once.
+A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsible section in the conversation in one click** — `Think` reasoning rows, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` — via an always-visible pill with a live count and a **customizable hotkey**.
 
 ![demo](docs/assets/demo.gif)
 
@@ -12,40 +12,35 @@ A DeepSeek Harness (DSH) Web client plugin: when an **expanded collapsible tag**
 
 | Feature | Description |
 |---|---|
-| 🧲 Affix chips | Expanded sections that slide off the top get their header pinned at the viewport top — click to collapse, auto-hides when scrolled back |
-| 🔘 Collapse-all pill | Always-visible pill at the bottom-right of the chat with a live count (`·N`); one click collapses every expanded section |
+| 🔘 Collapse-all pill | Always-visible pill at the bottom-right of the chat with a live count (`·N` = expanded sections); one click collapses them all |
 | ⌨️ Customizable hotkey | Default `Ctrl+Alt+C` (macOS `⌘⌥C`); press the gear, press a new combo, done — persisted locally |
 | 🎨 Native look | Styled entirely with the app's `--dsw-*` design tokens; follows dark/light themes |
 | 🪶 Non-invasive | Pure DOM implementation — no app code touched; full cleanup on unload |
 
 ### Real screenshots (live DSH Web instance)
 
-**Expanded Think row + the always-visible pill**:
+**Expanded Think row + the collapse-all pill with its live count**:
 
 ![expanded](docs/assets/screenshot-01-expanded.png)
-
-**After scrolling off the top — the header stays pinned and collapsible**:
-
-![affix chips](docs/assets/screenshot-02-chips.png)
 
 **Hotkey settings popover (gear → set → press the new combo)**:
 
 ![settings panel](docs/assets/screenshot-03-panel.png)　![capture armed](docs/assets/screenshot-04-capture.png)
 
+**After one click — the count drops to zero**:
+
+![collapsed](docs/assets/screenshot-05-collapsed.png)
+
 ## Why
 
-The collapse control of a Think row or tool card *is* its header row. When the section is expanded and long, reading further pushes that header off screen — the only collapse control is now out of reach, and you have to scroll all the way back. This plugin detects the moment the header leaves the top edge and materializes a floating **affix chip** at the top of the viewport, keeping "collapse" in front of you. The chip disappears on its own once the section is collapsed (by any means) or the header scrolls back into view.
+Long conversations accumulate expanded Think rows and tool cards, and collapsing them means hunting down each header one by one. This plugin puts a permanent "collapse all" pill at the bottom-right of the chat — with a live count of how many sections are expanded — plus a customizable hotkey: **one click or one keystroke returns the conversation to its clean, collapsed view**.
 
 ## Behavior
 
-- For every expanded disclosure (`[data-disclosure-row]` under a `data-open` root) inside the conversation scrollport (`[data-conversation-scroll]`), once its header row fully slides past the scrollport's top edge, an affix chip appears at the top of the scrollport, labelled with the section title (`Think`, the tool name, …).
-- **Clicking a chip collapses the original section** by dispatching a real `click` on the original header — it goes through the app's own React state, exactly as if you clicked the header itself. The chip disappears immediately.
-- Scrolling the header **back into view** removes the chip (the content stays expanded).
-- Multiple off-screen sections form a row in **document order** (wrapping when needed), never overlapping.
-- The **collapse-all pill** sits at the bottom-right of the scrollport with a live count of expanded sections and collapses **all** of them — visible or not — on click.
-- The **hotkey** does the same, so pressing it always has an immediately observable effect (which doubles as a liveness check).
-- On apply, the plugin logs `console.info("[dsh-sticky-disclosure] applied …")` and exposes `window.dshStickyDisclosure` (`expanded()` / `affixed()` / `hotkey()` / `setHotkey(spec)`).
-- Streaming output, session switches, and expand/collapse state changes are tracked via `MutationObserver` + scroll listening; plugin disposal (HMR/stop) restores everything.
+- The **collapse-all pill** sits at the bottom-right of the conversation scrollport with a live count (`·N`); clicking it collapses **every** expanded disclosure in the conversation.
+- The **hotkey** (default `Ctrl+Alt+C`, macOS `⌘⌥C`) does the same thing, so pressing it always has an immediately observable effect.
+- Expand/collapse state, streaming output, and session switches are tracked via `MutationObserver` + scroll/resize listening so the count stays accurate; plugin disposal (HMR/stop) restores everything.
+- On apply, the plugin logs `console.info("[dsh-sticky-disclosure] applied …")` and exposes `window.dshStickyDisclosure` (`expanded()` / `hotkey()` / `setHotkey(spec)`).
 
 ## ⌨️ Custom hotkey
 
@@ -70,8 +65,8 @@ window.dshStickyDisclosure.hotkey()                                             
 
 ### Stacking
 
-- The dock is fixed to the top edge of the conversation scrollport, horizontally aligned with the content's 32px padding; the collapse-all pill and gear are fixed to the scrollport's bottom-right corner.
-- `z-index: 15` (popover: 16): above chat content (0–6), below the app's overlay layer (20) and all dialogs/popups (100/1000-tier) — it never covers permission prompts, settings panels, or onboarding masks.
+- The collapse-all pill and the gear are fixed to the scrollport's bottom-right corner.
+- `z-index: 15` (popover: 16): above chat content, below the app's overlay layer (20) and all dialogs/popups (100/1000-tier) — it never covers permission prompts, settings panels, or onboarding masks.
 - Everything uses the app's design tokens (`--dsw-*`: background, border, shadow, type), so it follows dark/light themes and fonts automatically, with an entrance animation that respects `prefers-reduced-motion`.
 
 ## Install
@@ -133,13 +128,9 @@ All behavior parameters live in the constants block at the top of `lib/client.js
 |---|---|---|
 | `DEFAULT_HOTKEY` | `Ctrl+Alt+C` | Default hotkey (changeable in the settings popover, persisted) |
 | `STORAGE_KEY` | `dsh-sticky-disclosure:hotkey` | localStorage key for the persisted hotkey spec |
-| `DOCK_INSET_X` | `32` | Horizontal inset of the chip dock (matches the content's 32px padding) |
-| `DOCK_TOP_GAP` | `8` | Gap between the scrollport's top edge and the first chip row |
-| `DOCK_Z_INDEX` | `15` | Stacking level (must stay below the app overlay layer at z-20) |
-| `PANEL_Z_INDEX` | `16` | Settings popover level (above chips, below app overlays) |
-| `CHIP_MAX_WIDTH` | `260` | Max width of one chip (truncated beyond that) |
+| `DOCK_Z_INDEX` | `15` | Stacking level of the pill/gear (must stay below the app overlay layer at z-20) |
+| `PANEL_Z_INDEX` | `16` | Settings popover level (above the pill, below app overlays) |
 | `CONTROL_INSET` | `16` | Inset of the collapse-all pill from the scrollport's bottom-right corner |
-| `EDGE_TOLERANCE` | `0.5` | Tolerance in px for "fully slid off the top edge" |
 
 ## Tests
 
@@ -153,14 +144,13 @@ python test/verify.py   # needs Python 3 + playwright (python -m playwright inst
 - `verify.py` — a Playwright verification script (48 assertions);
 - `capture.py` — a script that captures the demo screenshots/GIF against a live instance.
 
-Coverage: always-visible pill and its count, chip appearance/position/gap/z-index/document order, click-to-collapse, hotkey collapse-all (visible sections and input-focused scenarios), **custom hotkey** (settings popover, capture, Esc cancel, persistence across reload, reset to default, invalid-spec rejection), auto-hide on scroll-back, composer exclusion, and full disposal.
+Coverage: pill presence and count, one-click collapse-all (visible sections and input-focused scenarios), **custom hotkey** (settings popover, capture, Esc cancel, persistence across reload, reset to default, invalid-spec rejection), automatic state sync, composer exclusion, and full disposal.
 
 > CI (`.github/workflows/test.yml`) runs the same suite on every push.
 
 ## Limitations
 
-- Scoped to the **conversation flow** (inside `[data-conversation-scroll]`). The Trajectory view has its own scroll container and collapse controls and is out of scope.
-- Only the "slid off the top" direction is handled (the common case: reading downward pushes the block out of view); off-the-bottom is not.
+- Scoped to the **conversation flow** (inside `[data-conversation-scroll]`). The Trajectory view has its own collapse controls and is out of scope.
 - It works through the `data-open` / `data-disclosure-row` DOM contract. If the upstream app changes that internal structure across upgrades, the selectors need to follow — see `docs/ARCHITECTURE.md`.
 
 ## Repository layout

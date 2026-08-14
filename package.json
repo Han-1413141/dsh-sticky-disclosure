@@ -1,7 +1,7 @@
 {
   "name": "dsh-sticky-disclosure",
   "version": "1.0.0",
-  "description": "DSH Web client plugin: pins expanded collapsible tags (Think / tool cards / command cards...) to the top of the conversation viewport once their header scrolls out of view, with a customizable collapse-all hotkey.",
+  "description": "DSH Web client plugin: collapse every expanded collapsible section in the conversation (Think / tool cards / command cards...) in one click, with a customizable hotkey.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
