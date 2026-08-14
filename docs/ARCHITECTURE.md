@@ -127,6 +127,13 @@ Two toggle shapes exist: rows that toggle on row-click carry `data-expandable`; 
 
 The hotkey acts unconditionally (no "are there affixed chips?" gate): it collapses every expanded disclosure, so pressing it always does something visible whenever any section is expanded.
 
+### 4.1 Custom hotkey: storage, validation, capture
+
+- **Spec**: `{ ctrl, meta, alt, shift, code }` (modifiers boolean, `code` = `KeyboardEvent.code`). Display label derived with macOS-aware glyphs (⌃⌥⇧⌘). Matching is exact on all four modifiers plus `code`.
+- **Storage**: serialized JSON under localStorage key `dsh-sticky-disclosure:hotkey`; read once at `apply()` with validation — `Escape` is rejected (app dialogs own it) and at least one of ctrl/meta/alt is required so a hotkey can never collide with typing. Corrupt/private-mode storage silently falls back to the default; `saveHotkey` is best-effort.
+- **Capture**: the settings popover arms a document-level capture-phase keydown listener; modifier-only presses are skipped (they are part of forming the combo), `Escape` cancels, and a valid combo is `preventDefault`ed + `stopPropagation`ed so the app never sees the captured chord. The popover itself sits at z-16 — above the chips, below app overlays.
+- **Surfaces**: the gear/popover UI, `window.dshStickyDisclosure.setHotkey(spec)` (returns false on invalid specs), and direct localStorage edits are interchangeable — all funnel through one `applyHotkey()` that validates, persists, and refreshes every tooltip.
+
 ## 5. Stacking design
 
 The shell's z-index ladder (observed in the built frontend CSS): content `0–6`, frame overlay layer `20`, popups `100–101`, dialogs `1000–1100`. The dock takes `15`:

@@ -4,9 +4,33 @@
 [![Tests](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml/badge.svg)](https://github.com/Han-1413141/dsh-sticky-disclosure/actions/workflows/test.yml)
 English | [中文](README.md)
 
-A DeepSeek Harness (DSH) Web client plugin: when an **expanded collapsible tag** — the `Think` reasoning row, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` in the conversation flow — **scrolls out of the top of the chat viewport, its header is pinned to the viewport's top edge**, so you can collapse it at any time. A floating pill with a live count and a hotkey collapse **every** expanded section at once.
+A DeepSeek Harness (DSH) Web client plugin: when an **expanded collapsible tag** — the `Think` reasoning row, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` in the conversation flow — **scrolls out of the top of the chat viewport, its header is pinned to the viewport's top edge**, so you can collapse it at any time. An always-visible collapse-all pill and a **customizable hotkey** collapse every expanded section at once.
 
-![affix chips](test/shot-chips.png)
+![demo](docs/assets/demo.gif)
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🧲 Affix chips | Expanded sections that slide off the top get their header pinned at the viewport top — click to collapse, auto-hides when scrolled back |
+| 🔘 Collapse-all pill | Always-visible pill at the bottom-right of the chat with a live count (`·N`); one click collapses every expanded section |
+| ⌨️ Customizable hotkey | Default `Ctrl+Alt+C` (macOS `⌘⌥C`); press the gear, press a new combo, done — persisted locally |
+| 🎨 Native look | Styled entirely with the app's `--dsw-*` design tokens; follows dark/light themes |
+| 🪶 Non-invasive | Pure DOM implementation — no app code touched; full cleanup on unload |
+
+### Real screenshots (live DSH Web instance)
+
+**Expanded Think row + the always-visible pill**:
+
+![expanded](docs/assets/screenshot-01-expanded.png)
+
+**After scrolling off the top — the header stays pinned and collapsible**:
+
+![affix chips](docs/assets/screenshot-02-chips.png)
+
+**Hotkey settings popover (gear → set → press the new combo)**:
+
+![settings panel](docs/assets/screenshot-03-panel.png)　![capture armed](docs/assets/screenshot-04-capture.png)
 
 ## Why
 
@@ -14,28 +38,41 @@ The collapse control of a Think row or tool card *is* its header row. When the s
 
 ## Behavior
 
-- **Always-visible "collapse all" pill** at the bottom-right corner of the conversation scrollport, with a live count of expanded sections (`·N`). It appears the moment the plugin loads — if you can see it, the plugin is live. Clicking it collapses every expanded section in the conversation, visible or not.
-- For every expanded disclosure (`[data-disclosure-row]` under a `data-open` root) inside the conversation scrollport (`[data-conversation-scroll]`), once its header row fully slides past the scrollport's top edge, an affix chip (a small pill button) appears at the top of the scrollport, labelled with the section title (`Think`, the tool name, …).
+- For every expanded disclosure (`[data-disclosure-row]` under a `data-open` root) inside the conversation scrollport (`[data-conversation-scroll]`), once its header row fully slides past the scrollport's top edge, an affix chip appears at the top of the scrollport, labelled with the section title (`Think`, the tool name, …).
 - **Clicking a chip collapses the original section** by dispatching a real `click` on the original header — it goes through the app's own React state, exactly as if you clicked the header itself. The chip disappears immediately.
 - Scrolling the header **back into view** removes the chip (the content stays expanded).
 - Multiple off-screen sections form a row in **document order** (wrapping when needed), never overlapping.
-- **Hotkey `Ctrl+Alt+C` (macOS `⌘+Option+C`)** collapses **every** expanded section in the conversation at once — visible ones included, so the effect is always observable on the spot.
-- On apply, the plugin logs `console.info("[dsh-sticky-disclosure] applied …")` and exposes `window.dshStickyDisclosure` (`expanded()` / `affixed()`) for support.
+- The **collapse-all pill** sits at the bottom-right of the scrollport with a live count of expanded sections and collapses **all** of them — visible or not — on click.
+- The **hotkey** does the same, so pressing it always has an immediately observable effect (which doubles as a liveness check).
+- On apply, the plugin logs `console.info("[dsh-sticky-disclosure] applied …")` and exposes `window.dshStickyDisclosure` (`expanded()` / `affixed()` / `hotkey()` / `setHotkey(spec)`).
 - Streaming output, session switches, and expand/collapse state changes are tracked via `MutationObserver` + scroll listening; plugin disposal (HMR/stop) restores everything.
 
-### Stacking
+## ⌨️ Custom hotkey
 
-- The dock is fixed to the top edge of the conversation scrollport, horizontally aligned with the content's 32px padding; the collapse-all pill is fixed to the scrollport's bottom-right corner.
-- `z-index: 15`: above chat content (0–6), below the app's overlay layer (20) and all dialogs/popups (100/1000-tier) — it never covers permission prompts, settings panels, or onboarding masks.
-- Everything uses the app's design tokens (`--dsw-*`: background, border, shadow, type), so it follows dark/light themes and fonts automatically, with an entrance animation that respects `prefers-reduced-motion`.
+1. Click the **keyboard gear** next to the collapse-all pill to open the settings popover;
+2. Click **Set** — the popover enters capture mode;
+3. **Press the new combo** (it must include `Ctrl` / `⌘` / `Alt`, e.g. `Ctrl+Shift+K`) — applied immediately and persisted in the browser's `localStorage` (nothing leaves your machine);
+4. `Esc` cancels capture; **Reset default** restores `Ctrl+Alt+C`.
+
+Programmatic access:
+
+```js
+window.dshStickyDisclosure.setHotkey({ ctrl: true, shift: true, code: "KeyK" }) // Ctrl+Shift+K
+window.dshStickyDisclosure.hotkey()                                              // "Ctrl+Shift+K"
+```
 
 ### Hotkey design
 
-Deliberately **not Escape**: the app's dialogs and popups already own `Escape`. `Ctrl+Alt+C` conflicts with no app shortcut, and:
-
+- Deliberately **not Escape**: the app's dialogs and popups already own `Escape` (the plugin only uses Esc to cancel its own capture, which never interferes);
 - it **works while an input is focused** — the most common state, since focus usually stays in the composer;
 - it backs off during IME composition (`isComposing`);
 - it backs off on AltGr (`getModifierState("AltGraph")` — on some keyboard layouts AltGr is reported as Ctrl+Alt and must never intercept the characters it types).
+
+### Stacking
+
+- The dock is fixed to the top edge of the conversation scrollport, horizontally aligned with the content's 32px padding; the collapse-all pill and gear are fixed to the scrollport's bottom-right corner.
+- `z-index: 15` (popover: 16): above chat content (0–6), below the app's overlay layer (20) and all dialogs/popups (100/1000-tier) — it never covers permission prompts, settings panels, or onboarding masks.
+- Everything uses the app's design tokens (`--dsw-*`: background, border, shadow, type), so it follows dark/light themes and fonts automatically, with an entrance animation that respects `prefers-reduced-motion`.
 
 ## Install
 
@@ -46,7 +83,7 @@ Deliberately **not Escape**: the app's dialogs and popups already own `Escape`. 
 From this repository's **parent directory** (relative paths get anchored to the invoking directory):
 
 ```bash
-# development (symlink; edit lib/client.js, restart dsh web, done):
+# development (symlink; edit lib/client.js, refresh the page, done):
 dsh plugin --profile web add link:./dsh-sticky-disclosure
 # or a fixed install:
 # dsh plugin --profile web add file:./dsh-sticky-disclosure
@@ -94,15 +131,15 @@ All behavior parameters live in the constants block at the top of `lib/client.js
 
 | Constant | Default | Meaning |
 |---|---|---|
-| `HOTKEY_LABEL` | `Ctrl+Alt+C` | Hotkey (label text; the actual check lives in `onKeyDown`) |
+| `DEFAULT_HOTKEY` | `Ctrl+Alt+C` | Default hotkey (changeable in the settings popover, persisted) |
+| `STORAGE_KEY` | `dsh-sticky-disclosure:hotkey` | localStorage key for the persisted hotkey spec |
 | `DOCK_INSET_X` | `32` | Horizontal inset of the chip dock (matches the content's 32px padding) |
 | `DOCK_TOP_GAP` | `8` | Gap between the scrollport's top edge and the first chip row |
 | `DOCK_Z_INDEX` | `15` | Stacking level (must stay below the app overlay layer at z-20) |
+| `PANEL_Z_INDEX` | `16` | Settings popover level (above chips, below app overlays) |
 | `CHIP_MAX_WIDTH` | `260` | Max width of one chip (truncated beyond that) |
 | `CONTROL_INSET` | `16` | Inset of the collapse-all pill from the scrollport's bottom-right corner |
 | `EDGE_TOLERANCE` | `0.5` | Tolerance in px for "fully slid off the top edge" |
-
-To change the hotkey, edit the modifier checks and `event.code` in `onKeyDown` (`lib/client.js`).
 
 ## Tests
 
@@ -113,9 +150,10 @@ python test/verify.py   # needs Python 3 + playwright (python -m playwright inst
 `test/` contains:
 
 - `mock.html` — a static harness reproducing the DSH DOM contract (`DisclosureRow` structure + the `[data-conversation-scroll]` scrollport);
-- `verify.py` — a Playwright verification script (35 assertions).
+- `verify.py` — a Playwright verification script (48 assertions);
+- `capture.py` — a script that captures the demo screenshots/GIF against a live instance.
 
-Coverage: always-visible pill and its count, chip appears after sliding off the top, dock position/gap/z-index (15), document order, click-to-collapse, `Ctrl+Alt+C` collapse-all (including visible sections and input-focused scenarios), pill click-to-collapse-all, chip disappears when the header becomes visible again (content stays expanded), composer panels never pinned, full restore on disposal.
+Coverage: always-visible pill and its count, chip appearance/position/gap/z-index/document order, click-to-collapse, hotkey collapse-all (visible sections and input-focused scenarios), **custom hotkey** (settings popover, capture, Esc cancel, persistence across reload, reset to default, invalid-spec rejection), auto-hide on scroll-back, composer exclusion, and full disposal.
 
 > CI (`.github/workflows/test.yml`) runs the same suite on every push.
 
@@ -137,9 +175,11 @@ dsh-sticky-disclosure/
 │   └── client.js                # browser half: self-contained bundle (__ModuleLoader__ handoff)
 ├── test/
 │   ├── mock.html                # static harness reproducing the DSH DOM contract
-│   ├── verify.py                # Playwright verification script (35 assertions)
-│   └── shot-chips.png           # screenshot (mock environment)
-├── docs/ARCHITECTURE.md         # architecture and implementation details
+│   ├── verify.py                # Playwright verification script (48 assertions)
+│   └── capture.py               # demo asset capture script
+├── docs/
+│   ├── assets/                  # screenshots and GIF
+│   └── ARCHITECTURE.md          # architecture and implementation details
 ├── README.md / README.en.md
 └── LICENSE
 ```
@@ -150,7 +190,7 @@ dsh-sticky-disclosure/
 - Browser side: the bundle registers a module via `window.__ModuleLoader__.load({ id, factory })`, exports a cordis plugin (`name`/`apply`), and the Web shell's Loader activates it.
 - The plugin body is pure DOM: it touches no app code — it reads the `data-open` / `data-disclosure-row` contract and dispatches clicks at the original headers, so it survives app upgrades, themes, and locales.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full pipeline, contracts, state model, and stacking design.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full pipeline, contracts, state model, hotkey configuration, and stacking design.
 
 ## License
 

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-08-14
+
+### Added
+
+- **Customizable collapse hotkey**:
+  - gear button beside the collapse-all pill opens a themed settings popover showing the current shortcut;
+  - one-click capture ("press the new combo"), Escape-to-cancel, reset-to-default;
+  - persisted in `localStorage` (`dsh-sticky-disclosure:hotkey`), validated on load with fallback to `Ctrl+Alt+C`; at least one of Ctrl/⌘/Alt is required, Escape is reserved;
+  - programmatic surface: `window.dshStickyDisclosure.setHotkey(spec)` / `.hotkey()`.
+- Demo assets: real-instance screenshots (`docs/assets/screenshot-01…05.png`) and an animated demo (`docs/assets/demo.gif`) embedded in the READMEs.
+- Test coverage for the whole customization flow (capture, cancel, persistence, reset, invalid specs) — 48 assertions total.
+
+### Changed
+
+- Hotkey matching is now spec-driven (exact modifier match + `KeyboardEvent.code`), tooltips always render the active shortcut.
+
 ## [0.2.0] - 2026-08-14
 
 ### Changed

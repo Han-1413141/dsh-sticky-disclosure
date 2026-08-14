@@ -62,7 +62,8 @@ def main():
         })()""")
         check("control pill visible on load", initial_control is not None, str(initial_control))
         check("control count = expanded rows (4)", initial_control is not None and initial_control["count"] == "4", str(initial_control))
-        check("debug handle exposed", eval_js("window.dshStickyDisclosure && window.dshStickyDisclosure.version") == "0.2.0")
+        check("gear button visible on load", eval_js("!!document.querySelector('[data-sticky-disclosure-gear]')"))
+        check("debug handle exposed", eval_js("window.dshStickyDisclosure && window.dshStickyDisclosure.version") == "1.0.0")
 
         # --- 2. scroll the first expanded block off the top -----------------
         set_scroll(400)
@@ -171,7 +172,60 @@ def main():
         check("control count resets to 0", eval_js(
             "document.querySelector('[data-sticky-disclosure-control]').getAttribute('data-count')") == "0")
 
+        # --- 7b. customizable hotkey ------------------------------------------
+        default_title = eval_js("document.querySelector('[data-sticky-disclosure-control]').title")
+        check("default hotkey in pill tooltip", "Ctrl+Alt+C" in default_title, str(default_title))
+        ok_invalid = eval_js("window.dshStickyDisclosure.setHotkey({ code: 'KeyZ' })")
+        check("setHotkey rejects modifier-less spec", ok_invalid is False, str(ok_invalid))
+        ok_valid = eval_js("window.dshStickyDisclosure.setHotkey({ ctrl: true, shift: true, code: 'KeyK' })")
+        check("setHotkey accepts valid spec", ok_valid is True)
+        eval_js("""(() => {
+          const row = document.querySelector('#b5 [data-disclosure-row]');
+          if (!row.parentElement.hasAttribute('data-open')) row.click();
+        })()""")
+        page.wait_for_timeout(150)
+        page.keyboard.press("Control+Alt+C")
+        page.wait_for_timeout(150)
+        check("old hotkey no longer collapses", row_status("b5")["expanded"] is True)
+        page.keyboard.press("Control+Shift+K")
+        page.wait_for_timeout(150)
+        check("custom hotkey collapses", row_status("b5")["expanded"] is False)
+        page.reload(wait_until="load")
+        page.wait_for_timeout(400)
+        check("custom hotkey persists after reload", eval_js(
+            "window.dshStickyDisclosure && window.dshStickyDisclosure.hotkey()") == "Ctrl+Shift+K")
+        eval_js("document.querySelector('[data-sticky-disclosure-gear]').click()")
+        page.wait_for_timeout(150)
+        check("settings panel opens", eval_js("!!document.querySelector('[data-sticky-disclosure-settings]')"))
+        check("panel shows current hotkey", eval_js(
+            "document.querySelector('[data-sticky-disclosure-current]').textContent") == "Ctrl+Shift+K")
+        eval_js("document.querySelector('[data-sticky-disclosure-capture]').click()")
+        page.wait_for_timeout(100)
+        check("capture armed state", eval_js(
+            "document.querySelector('[data-sticky-disclosure-capture]').hasAttribute('data-armed')"))
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(100)
+        check("escape cancels capture", not eval_js(
+            "document.querySelector('[data-sticky-disclosure-capture]').hasAttribute('data-armed')"))
+        check("hotkey unchanged after cancel", eval_js(
+            "window.dshStickyDisclosure.hotkey()") == "Ctrl+Shift+K")
+        eval_js("document.querySelector('[data-sticky-disclosure-capture]').click()")
+        page.wait_for_timeout(100)
+        page.keyboard.press("Control+Alt+J")
+        page.wait_for_timeout(150)
+        check("capture records new combo", eval_js(
+            "window.dshStickyDisclosure.hotkey()") == "Ctrl+Alt+J")
+        eval_js("document.querySelector('[data-sticky-disclosure-reset]').click()")
+        page.wait_for_timeout(150)
+        check("reset restores default", eval_js(
+            "window.dshStickyDisclosure.hotkey()") == "Ctrl+Alt+C")
+        eval_js("document.querySelector('[data-sticky-disclosure-gear]').click()")
+        page.wait_for_timeout(100)
+        check("panel closes", not eval_js("!!document.querySelector('[data-sticky-disclosure-settings]')"))
+
         # --- 8. disposal restores everything --------------------------------
+        page.keyboard.press("Control+Alt+C")  # default restored: collapse the fresh post-reload DOM
+        page.wait_for_timeout(150)
         eval_js("""(() => {
           const row = document.querySelector('#b5 [data-disclosure-row]');
           if (!row.parentElement.hasAttribute('data-open')) row.click();
@@ -184,6 +238,8 @@ def main():
         check("dispose removes dock and chips", dock_count() == 0)
         check("dispose removes control pill", eval_js(
             "!document.querySelector('[data-sticky-disclosure-control]')"))
+        check("dispose removes gear and panel", eval_js(
+            "!document.querySelector('[data-sticky-disclosure-gear]') && !document.querySelector('[data-sticky-disclosure-settings]')"))
         check("dispose removes injected style", eval_js(
             "!document.querySelector('style[data-plugin=\"dsh-sticky-disclosure\"]')"))
 
