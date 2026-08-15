@@ -5,9 +5,9 @@
 [![awesome · DSH plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 English | [中文](README.md)
 
-![Promo art: whale girl collapsing an expanded Think with her gourd](docs/assets/promo.webp)
+![Promo: collapse all expanded sections and pin off-screen Think labels](docs/assets/promo.webp)
 
-A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsible section in the conversation in one click** — `Think` reasoning rows, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` — via an always-visible pill with a live count and a **customizable hotkey**.
+A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsible section in the conversation in one click** — `Think` reasoning rows, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` — via an always-visible pill with a live count and a **customizable hotkey**. When an expanded section scrolls off the top, its header is pinned to the top of the conversation so you can still collapse it.
 
 ![demo](docs/assets/demo.gif)
 
@@ -15,6 +15,7 @@ A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsibl
 
 | Feature | Description |
 |---|---|
+| 📌 Pin off-screen labels | Expanded Think / tool / command labels that slide off the top get pinned as chips; click a chip to collapse the original section |
 | 🔘 Collapse-all pill | Always-visible pill at the bottom-right of the chat with a live count (`·N` = expanded sections); one click collapses them all |
 | ⌨️ Customizable hotkey | Default `Ctrl+Alt+C` (macOS `⌘⌥C`); press the gear, press a new combo, done — persisted locally |
 | 🎨 Native look | Styled entirely with the app's `--dsw-*` design tokens; follows dark/light themes |
@@ -36,10 +37,11 @@ A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsibl
 
 ## Why
 
-Long conversations accumulate expanded Think rows and tool cards, and collapsing them means hunting down each header one by one. This plugin puts a permanent "collapse all" pill at the bottom-right of the chat — with a live count of how many sections are expanded — plus a customizable hotkey: **one click or one keystroke returns the conversation to its clean, collapsed view**.
+Long conversations accumulate expanded Think rows and tool cards, and collapsing them means hunting down each header one by one — often after it has already scrolled out of view. This plugin puts a permanent "collapse all" pill at the bottom-right of the chat — with a live count of how many sections are expanded — plus a customizable hotkey: **one click or one keystroke returns the conversation to its clean, collapsed view**. When a section scrolls off the top, its header is pinned at the top of the conversation so you never lose the collapse control.
 
 ## Behavior
 
+- **Off-screen pinning**: once an expanded header fully slides past the top edge of the conversation scrollport, a chip appears at the top labelled with the section title (`Think`, tool name, …); clicking the chip collapses the original section, and the chip disappears when the header scrolls back into view or the section is collapsed.
 - The **collapse-all pill** sits at the bottom-right of the conversation scrollport with a live count (`·N`); clicking it collapses **every** expanded disclosure in the conversation.
 - The **hotkey** (default `Ctrl+Alt+C`, macOS `⌘⌥C`) does the same thing, so pressing it always has an immediately observable effect.
 - Expand/collapse state, streaming output, and session switches are tracked via `MutationObserver` + scroll/resize listening so the count stays accurate; plugin disposal (HMR/stop) restores everything.
