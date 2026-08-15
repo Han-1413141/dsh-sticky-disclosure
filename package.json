@@ -1,6 +1,6 @@
 {
   "name": "dsh-sticky-disclosure",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DSH Web client plugin: collapse every expanded collapsible section in the conversation (Think / tool cards / command cards...) in one click, with a customizable hotkey.",
   "type": "module",
   "main": "lib/index.js",

@@ -102,6 +102,17 @@ def main():
         check("three chips, document order", labels == ["Think", "pwsh", "compact"], str(labels))
         check("composer panel never pinned", "ComposerPanel" not in labels, str(labels))
 
+        # --- 3b. no update loop while idle ---------------------------------
+        eval_js("""(() => {
+          window.__dshSdLoopCount = 0;
+          window.__dshSdLoopObserver = new MutationObserver(() => { window.__dshSdLoopCount++ });
+          window.__dshSdLoopObserver.observe(document.body, { childList: true, subtree: true });
+        })()""")
+        page.wait_for_timeout(500)
+        loop_count = eval_js("window.__dshSdLoopCount")
+        eval_js("window.__dshSdLoopObserver.disconnect()")
+        check("no continuous DOM mutations while chips are pinned", loop_count == 0, str(loop_count))
+
         # --- 4. click a chip collapses the original row ---------------------
         before = row_status("b1")
         page.click('[data-sticky-disclosure-chip] >> nth=0')

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-08-14
+
+### Added
+
+- **One-click install**: in-repo `install.ps1` — `irm … | iex` remote install that auto-provisions pnpm, auto-detects git (tarball fallback), and updates on re-run.
+- **Remote install forms** in the READMEs: `dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure` and the GitHub archive tarball — no clone required.
+- CI: `install-smoke` workflow verifying the one-click install path on Windows and Linux runners.
+
+### Fixed
+
+- **Off-screen affix chips no longer flash or ignore clicks**: the update loop kept re-appending already-ordered chips and rewriting the same pill count text, which triggered the plugin's own `MutationObserver` and caused endless DOM churn. The dock is now only touched when its order actually changes, and the pill count text is only rewritten when it differs.
+
 ## [1.0.0] - 2026-08-14
 
 ### Added
