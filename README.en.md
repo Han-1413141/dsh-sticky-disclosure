@@ -9,7 +9,7 @@ English | [中文](README.md)
 
 A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsible section in the conversation in one click** — `Think` reasoning rows, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` — via an always-visible pill with a live count and a **customizable hotkey**. When an expanded section scrolls off the top, its header is pinned to the top of the conversation so you can still collapse it.
 
-![demo](docs/assets/demo.gif)
+![Pinning diagram: off-screen Think labels are pinned to the top](docs/assets/pinning-diagram.webp)
 
 ## ✨ Features
 

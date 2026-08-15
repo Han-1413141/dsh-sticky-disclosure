@@ -57,4 +57,5 @@ Long DSH conversations pile up expanded Think rows and tool cards, and collapsin
 | README / 中文宣传图 | `assets/promo.webp` |
 | 社交卡片（中文） | `assets/promo-social.png` |
 | English promo | `assets/promo-en.webp` / `assets/promo-social-en.png` |
+| 钉住示意图（README 首图） | `assets/pinning-diagram.webp` / `assets/pinning-diagram.png` |
 | 演示 GIF | `assets/demo.gif` |
