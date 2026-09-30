@@ -11,7 +11,7 @@ profile (dsh.profile.bundles)                  $DSH_HOME/profiles/web/package.js
   └─ bundle package declaring dsh.bundle.patch  → cordis.patch.yml (ours: one `insert` row)
        └─ host tree entry `sticky-disclosure`
             └─ scanned by dsh-client-modules (node half) because package.json declares dsh.client
-                 └─ window.__DSH_BOOT__.entries  ← { id, url: "/plugins/<id>/client.js?rev=<rev>" }
+                 └─ window.__DSH_BOOT__.entries  ← { id, url: "plugins/??<id>/client.js&rev=<rev>" }
                       └─ Web shell kernel (ClientModuleSystem) prefetches the bundle script
                            └─ bundle calls window.__ModuleLoader__.load({ id, factory })
                                 └─ vendored cordis Loader materializes the module, activates the fiber
@@ -21,8 +21,8 @@ profile (dsh.profile.bundles)                  $DSH_HOME/profiles/web/package.js
 Key facts discovered while building this plugin:
 
 - **The host scans *loaded* entries.** `dsh-client-modules` only sees packages that appear as entries with a fiber on the host cordis tree. A client-only plugin therefore still needs a host half that loads successfully — ours is an inert marker (`lib/index.js`).
-- **The bundle is served verbatim.** `/plugins/<id>/client.js` returns the built artifact from `exports["./client"]` with `cache-control: no-cache` and a content-hash `?rev=` query. There is no runtime bundling for third-party packages: the file must be self-contained, which is why `lib/client.js` has zero imports.
-- **`ctx.baseUrl` is anchored at the profile directory**, so a plugin installed into `$DSH_HOME/profiles/<name>/node_modules` (pnpm `link:`/`file:` or a hand-made junction) resolves through Node's ordinary parent-walk. `healProfilesModuleFallback` covers the in-box packages; profile-local ones come from the profile's own node_modules.
+- **Current bundle transport:** DSH 0.2.0-rc.2 serves revisioned combo routes (`plugins/??<id>/client.js&rev=<rev>`). Desktop proxies the same shared registry and disables disk caching for plugin responses. The dependency-free client bundle remains self-contained; restart the Host after edits unless HMR reports a rebuild.
+- **`ctx.baseUrl` is anchored at the profile directory**, so a plugin installed into `$DSH_HOME/profiles/<name>/node_modules` (pnpm `link:`/`file:` or a hand-made junction) resolves through Node's ordinary parent-walk. The current Desktop runtime resolves built-in packages from its bundled runtime; installed plugins retain profile-local resolution priority.
 - **Plugin-set changes take effect on restart.** Package metadata is cached per name and never expires during a process lifetime; bundle *content* changes are re-hashed only through the HMR rebuild path.
 
 ### Package manifest anatomy
@@ -154,6 +154,8 @@ The injected `<style>` follows the platform convention: `data-plugin` = package 
 Two layers, mirroring the risk profile:
 
 1. **`test/mock.html` + `test/verify.py`** — a static page reproducing the exact DOM contract (DisclosureRow structure, scrollport, composer seat, mock toggle behavior), loading the real bundle through a stub `__ModuleLoader__` and a minimal cordis-like `ctx`. 35 Playwright assertions cover the always-visible pill (presence, count, bottom-right pinning), chip appearance, geometry, z-index, ordering, both toggle shapes, hotkey collapse-all (including visible sections and input-focused), pill click-to-collapse-all, auto-hide, composer exclusion, and full disposal.
-2. **Real-instance E2E** (run manually, documented for contributors) — boot an isolated profile (`DSH_HOME` pointed at a scratch dir, different port) with the plugin in its bundles, then assert: the entry appears in `window.__DSH_BOOT__`, `/plugins/<id>/client.js` serves 200, the plugin's style tag exists, and — with a disclosure injected into the live DOM — chips pin, clicks collapse, the pill counts, and the hotkey works with the composer focused.
+2. **Real-instance E2E** (run manually, documented for contributors) — boot an isolated profile (`DSH_HOME` pointed at a scratch dir, different port) with the plugin in its bundles, then assert: the entry appears in `window.__DSH_BOOT__`, the entry graph’s revisioned bundle URL serves 200, the plugin's style tag exists, and — with a disclosure injected into the live DOM — chips pin, clicks collapse, the pill counts, and the hotkey works with the composer focused.
 
 CI runs layer 1 on every push.
+
+Current compatibility and verification boundaries: [COMPATIBILITY.md](COMPATIBILITY.md).
