@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Match current DSH light/dark surfaces, neutral compact buttons, typography and corner radii.
+- Show shortcuts as individual keycaps with clearer settings spacing and consistent outline icons.
+- Keep the settings panel and controls inside narrow viewports and below native Desktop titlebars.
+
 - Support current turn-process disclosures in addition to DisclosureRow controls.
 - Add Chinese/English UI and correct the macOS default shortcut.
 - Stop capture listeners when settings close or sessions disappear; ignore IME/repeat input during capture.

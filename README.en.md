@@ -11,6 +11,14 @@ A DeepSeek Harness (DSH) Desktop and Web plugin: **collapse expanded conversatio
 
 ![Pinning diagram: off-screen Think labels are pinned to the top](docs/assets/pinning-diagram.webp)
 
+## Native shortcut settings
+
+| Light | Dark |
+|---|---|
+| ![Light shortcut settings](docs/assets/ui-native-light.png) | ![Dark shortcut settings](docs/assets/ui-native-dark.png) |
+
+Uses current DSH surfaces, typography and corner radii, with individual keycaps. The panel stays within narrow windows and below native titlebars. These are actual plugin renders using the official theme and a local fixture.
+
 ## Recent improvements
 
 - Supports the turn-process buttons in DSH 0.2.0-rc.2 alongside Think and tool cards.
@@ -23,14 +31,14 @@ A DeepSeek Harness (DSH) Desktop and Web plugin: **collapse expanded conversatio
 | Feature | Description |
 |---|---|
 | 📌 Pin off-screen labels | Expanded Think / tool / command labels that slide off the top get pinned as chips; click a chip to collapse the original section |
-| 🔘 Collapse-all pill | Always-visible pill at the bottom-right of the chat with a live count (`·N` = expanded sections); one click collapses them all |
+| 🔘 Collapse-all button | Always-visible button at the bottom-right of the chat with a live count (`·N` = expanded sections); one click collapses them all |
 | ⌨️ Customizable hotkey | Default `Ctrl+Alt+C` (macOS `⌘⌥C`); press the gear, press a new combo, done — persisted locally |
 | 🎨 Native look | Styled entirely with the app's `--dsw-*` design tokens; follows dark/light themes |
 | 🪶 Non-invasive | Pure DOM implementation — no app code touched; full cleanup on unload |
 
-### Real screenshots (live DSH Web instance)
+### Interaction examples (earlier UI in a live DSH Web instance)
 
-**Expanded Think row + the collapse-all pill with its live count**:
+**Expanded Think row + the collapse-all button with its live count**:
 
 ![expanded](docs/assets/screenshot-01-expanded.png)
 
@@ -49,14 +57,14 @@ Long conversations accumulate expanded Think rows and tool cards, and collapsing
 ## Behavior
 
 - **Off-screen pinning**: once an expanded header fully slides past the top edge of the conversation scrollport, a chip appears at the top labelled with the section title (`Think`, tool name, …); clicking the chip collapses the original section, and the chip disappears when the header scrolls back into view or the section is collapsed.
-- The **collapse-all pill** sits at the bottom-right of the conversation scrollport with a live count (`·N`); clicking it collapses **every** expanded disclosure in the conversation.
+- The **collapse-all button** sits at the bottom-right of the conversation scrollport with a live count (`·N`); clicking it collapses **every** expanded disclosure in the conversation.
 - The **hotkey** (default `Ctrl+Alt+C`, macOS `⌘⌥C`) does the same thing, so pressing it always has an immediately observable effect.
 - Expand/collapse state, streaming output, and session switches are tracked via `MutationObserver` + scroll/resize listening so the count stays accurate; plugin disposal (HMR/stop) restores everything.
 - On apply, the plugin logs `console.info("[dsh-sticky-disclosure] applied …")` and exposes `window.dshStickyDisclosure` (`expanded()` / `hotkey()` / `setHotkey(spec)`).
 
 ## ⌨️ Custom hotkey
 
-1. Click the **keyboard gear** next to the collapse-all pill to open the settings popover;
+1. Click the **keyboard gear** next to the collapse-all button to open the settings popover;
 2. Click **Set** — the popover enters capture mode;
 3. **Press the new combo** (it must include `Ctrl` / `⌘` / `Alt`, e.g. `Ctrl+Shift+K`) — applied immediately and persisted in the browser's `localStorage` (nothing leaves your machine);
 4. `Esc` cancels capture; **Reset default** restores `Ctrl+Alt+C`.
@@ -77,7 +85,7 @@ window.dshStickyDisclosure.hotkey()                                             
 
 ### Stacking
 
-- The collapse-all pill and the gear are fixed to the scrollport's bottom-right corner.
+- The collapse-all button and the gear are fixed to the scrollport's bottom-right corner.
 - `z-index: 15` (popover: 16): above chat content, below the app's overlay layer (20) and all dialogs/popups (100/1000-tier) — it never covers permission prompts, settings panels, or onboarding masks.
 - Everything uses the app's design tokens (`--dsw-*`: background, border, shadow, type), so it follows dark/light themes and fonts automatically, with an entrance animation that respects `prefers-reduced-motion`.
 
@@ -130,7 +138,7 @@ All behavior parameters live in the constants block at the top of `lib/client.js
 | `STORAGE_KEY` | `dsh-sticky-disclosure:hotkey` | localStorage key for the persisted hotkey spec |
 | `DOCK_Z_INDEX` | `15` | Stacking level of the pill/gear (must stay below the app overlay layer at z-20) |
 | `PANEL_Z_INDEX` | `16` | Settings popover level (above the pill, below app overlays) |
-| `CONTROL_INSET` | `16` | Inset of the collapse-all pill from the scrollport's bottom-right corner |
+| `CONTROL_INSET` | `16` | Inset of the collapse-all button from the scrollport's bottom-right corner |
 
 ## Tests
 

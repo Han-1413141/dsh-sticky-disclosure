@@ -18,7 +18,11 @@ The host now serves revisioned combo URLs (`plugins/??…&rev=…`). Tests use t
 
 These results describe the version above, not a guarantee for future DOM changes. `test/runtime-smoke.mjs` accepts the installed runtime's package-resolution root as its first argument. `test/verify_compat.py` explicitly emulates Desktop markers rather than launching Electron.
 
+The settings panel uses the host's layer surfaces, native compact-button radius and neutral primary color, with individual keycaps. Light/dark previews use official theme CSS from the pinned revision below. Local visual checks covered a 320 px window and native titlebar clearance; previews are fixture renders rather than native-window screenshots.
+
 Source references:
+
+- [Native button styles](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/packages/client/ui-primitives/src/Button.module.css)
 
 - [0.2.0-rc.2 release](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.0-rc.2)
 - [Desktop runtime and plugin installation](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/apps/desktop/README.zh.md)

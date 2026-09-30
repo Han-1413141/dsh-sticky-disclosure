@@ -92,7 +92,10 @@ def main():
                    bg: s.backgroundColor, border: s.borderTopWidth + ' ' + s.borderTopStyle,
                    dockPointer: getComputedStyle(c.parentElement).pointerEvents };
         })()""")
-        check("chip is a 28px pill", chip_style["height"] == "28px" and chip_style["radius"] == "999px", str(chip_style))
+        eval_js("document.body.style.setProperty('--dsw-radius-sm', '10px')")
+        check("chip follows the host compact-control radius",
+              chip_style["height"] == "28px" and eval_js("getComputedStyle(document.querySelector('[data-sticky-disclosure-chip]')).borderRadius") == "10px")
+        eval_js("document.body.style.removeProperty('--dsw-radius-sm')")
         check("chip interactive, dock click-through", chip_style["cursor"] == "pointer" and chip_style["dockPointer"] == "none", str(chip_style))
         check("chip themed via design tokens", chip_style["bg"] == "rgb(255, 255, 255)" and chip_style["border"] == "1px solid", str(chip_style))
         check("collapsed b2 got no chip", chip_labels() == ["Think"])
