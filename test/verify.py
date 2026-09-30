@@ -5,6 +5,7 @@ Uses Playwright chromium (headless) over a file:// mock page that reproduces
 the DisclosureRow / [data-conversation-scroll] DOM contract of the DSH web UI.
 """
 import sys
+import json
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -63,7 +64,8 @@ def main():
         check("control pill visible on load", initial_control is not None, str(initial_control))
         check("control count = expanded rows (4)", initial_control is not None and initial_control["count"] == "4", str(initial_control))
         check("gear button visible on load", eval_js("!!document.querySelector('[data-sticky-disclosure-gear]')"))
-        check("debug handle exposed", eval_js("window.dshStickyDisclosure && window.dshStickyDisclosure.version") == "1.0.0")
+        version = json.loads((MOCK.parent.parent / "package.json").read_text(encoding="utf-8"))["version"]
+        check("debug handle exposed", eval_js("window.dshStickyDisclosure && window.dshStickyDisclosure.version") == version)
 
         # --- 2. scroll the first expanded block off the top -----------------
         set_scroll(400)
@@ -254,7 +256,6 @@ def main():
         check("dispose removes injected style", eval_js(
             "!document.querySelector('style[data-plugin=\"dsh-sticky-disclosure\"]')"))
 
-        page.screenshot(path=str(Path(__file__).resolve().parent / "shot-final.png"))
         browser.close()
 
     print("-" * 60)

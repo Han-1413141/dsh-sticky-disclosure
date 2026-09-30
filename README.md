@@ -7,9 +7,16 @@
 
 ![宣传图：一键收起 + 滑出屏幕自动钉住 Think 等标签](docs/assets/promo.webp)
 
-DSH Web 客户端插件：**一键收起会话里所有展开的可折叠区块**（Think 思考行、工具卡片、命令卡片、上下文注入行等），带实时计数的常驻按钮 + **可自定义的快捷键**。展开的区块滑出屏幕时，标题会自动钉在会话顶部，随时可以点一下收起。
+DSH 桌面端与 Web 插件：**一键收起会话里所有展开的可折叠区块**（Think 思考行、工具卡片、命令卡片、上下文注入行等），带实时计数的常驻按钮 + **可自定义的快捷键**。展开的区块滑出屏幕时，标题会自动钉在会话顶部，随时可以点一下收起。
 
 ![钉住示意图：滑出屏幕的 Think 等标签自动钉在顶部](docs/assets/pinning-diagram.webp)
+
+## 本轮改进
+
+- 识别 DSH 0.2.0-rc.2 的执行过程按钮，同时保留 Think 与工具卡片支持。
+- 界面跟随中文或英文设置；macOS 默认快捷键使用 `⌘⌥C`。
+- 关闭设置或切换会话时立即停止快捷键捕获，输入法组合输入不被捕获。
+- 设置可用 Esc 关闭，关闭后焦点返回设置按钮；桌面端浮层使用 `no-drag`。
 
 ## ✨ 功能
 
@@ -75,78 +82,42 @@ window.dshStickyDisclosure.hotkey()                                             
 
 ## 安装
 
-> 需求：Node.js ≥ 20 + DeepSeek Harness（带 `dsh plugin` 命令的版本，`npm install -g @deepseek-ai/dsh`）。插件随 `dsh web` 启动。
+**桌面端（DSH 0.2.0-rc.2）**：在侧栏打开「插件 → 添加插件」，粘贴下面的地址，安装后选择「立即启用」。若应用提示需要重启，按提示操作。
 
-### 方式〇：一键安装（推荐，无需克隆仓库）
+```text
+github:Han-1413141/dsh-sticky-disclosure
+```
 
-**PowerShell 一键脚本**（复制整行粘贴回车；自动补齐 pnpm、自动探测 git）：
+桌面端自带 Node 和 pnpm。使用终端安装时，先从应用菜单的「管理 dsh 命令」安装内置命令；启动过一次桌面端以初始化配置后，完全退出应用，再执行：
+
+```bash
+dsh plugin --profile desktop add github:Han-1413141/dsh-sticky-disclosure
+```
+
+随后重新打开桌面端。**Web 版**使用独立的 `web` 配置：
+
+```bash
+dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure
+dsh web
+```
+
+独立 CLI 遵循 DSH 的 Node 要求，本轮核验版本为 `^22.19.0 || >=24.0.0`；使用桌面端内置命令无需另装 Node 或 pnpm。
+
+PowerShell 一键安装（检测到桌面端内置命令时选择 `desktop`，否则选择 `web`）：
 
 ```powershell
 irm https://raw.githubusercontent.com/Han-1413141/dsh-sticky-disclosure/main/install.ps1 | iex
 ```
 
-**或直接命令行**（机器上需已有 pnpm 与 git）：
+需要指定目标时，下载 `install.ps1` 后运行 `./install.ps1 -Profile desktop` 或 `-Profile web`。没有 Git 时，可将安装地址换成 `https://github.com/Han-1413141/dsh-sticky-disclosure/archive/refs/heads/main.tar.gz`。
 
 ```bash
-dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure
+# Web 版将 desktop 换成 web。
+dsh plugin --profile desktop update dsh-sticky-disclosure
+dsh plugin --profile desktop remove dsh-sticky-disclosure
 ```
 
-没有 git 时可用 GitHub 打包直链（更新时先 remove 再 add）：
-
-```bash
-dsh plugin --profile web add https://github.com/Han-1413141/dsh-sticky-disclosure/archive/refs/heads/main.tar.gz
-```
-
-### 方式一：本地开发（`dsh plugin` + 符号链接）
-
-在本仓库**父目录**执行（相对路径会被锚定到调用目录）：
-
-```bash
-git clone https://github.com/Han-1413141/dsh-sticky-disclosure.git
-cd <克隆目录的父目录>
-# 符号链接,改 lib/client.js 后刷新页面即生效:
-dsh plugin --profile web add link:./dsh-sticky-disclosure
-# 或固定安装:
-# dsh plugin --profile web add file:./dsh-sticky-disclosure
-```
-
-### 方式二：手工安装（机器上没有 pnpm）
-
-1. 在 `<DSH_HOME>\profiles\web\package.json`（默认 `%USERPROFILE%\.dsh\profiles\web\package.json`）中：
-   - `dependencies` 增加 `"dsh-sticky-disclosure": "link:<本仓库的绝对路径>"`
-   - `dsh.profile.bundles` 末尾追加 `"dsh-sticky-disclosure"`
-2. 在 profile 的 node_modules 里建目录联接（与 pnpm `link:` 依赖留下的链接一致）：
-   ```powershell
-   New-Item -ItemType Junction `
-     -Path "$env:USERPROFILE\.dsh\profiles\web\node_modules\dsh-sticky-disclosure" `
-     -Target "<本仓库的绝对路径>"
-   ```
-
-### 激活
-
-插件集合变化在**重启时生效**（运行中的服务保持旧图）。**插件 bundle 按 no-cache 提供**：改完 `lib/client.js` 后只需**刷新页面**（Ctrl+F5）即可拿到新代码，无需重启服务。
-
-```bash
-# 首次安装后：停掉当前 dsh web 再启动
-dsh web
-```
-
-验证是否进入插件图（应看到 `id: sticky-disclosure` 与 `name: dsh-sticky-disclosure`）：
-
-```bash
-dsh --profile web --dump-config | findstr sticky-disclosure
-```
-
-页面加载后，聊天区右下角出现「全部收起」药丸按钮即表示插件已激活。
-
-### 更新 / 卸载
-
-```bash
-dsh plugin --profile web update dsh-sticky-disclosure  # 更新到最新提交(git 方式;或重跑一键脚本)
-dsh plugin --profile web remove dsh-sticky-disclosure  # 卸载
-```
-
-手工方式：从 `package.json` 的 `dependencies`/`bundles` 删掉对应条目，删除 `profiles\web\node_modules\dsh-sticky-disclosure` 联接，然后重启 `dsh web`。
+Web 与桌面端分别保存偏好设置。版本依据与实际验证范围见 [兼容性说明](docs/COMPATIBILITY.md)。
 
 ## 微调
 
@@ -163,13 +134,14 @@ dsh plugin --profile web remove dsh-sticky-disclosure  # 卸载
 ## 测试
 
 ```bash
-python test/verify.py   # 需要 Python 3 + playwright（python -m playwright install chromium）
+python -X utf8 test/verify.py
+python -X utf8 test/verify_compat.py   # 需要 Python 3 + playwright（python -m playwright install chromium）
 ```
 
 `test/` 包含：
 
 - `mock.html` —— 复刻 DSH DOM 契约（`DisclosureRow` 结构 + `[data-conversation-scroll]` 滚动区）的静态测试台；
-- `verify.py` —— Playwright 验证脚本（48 项断言）；
+- `verify.py` —— Playwright 验证脚本；
 - `capture.py` —— 在真实实例上采集演示截图/GIF 的脚本。
 
 覆盖：按钮出现与计数、一键收起全部（含可见区块与输入框聚焦场景）、**自定义快捷键**（设置面板、捕获、Esc 取消、持久化、恢复默认、非法规格拒绝）、状态自动同步、composer 排除、卸载全量还原。
@@ -196,7 +168,7 @@ dsh-sticky-disclosure/
 │   └── client.js                # 浏览器半身：自包含 bundle（__ModuleLoader__ handoff）
 ├── test/
 │   ├── mock.html                # 复刻 DSH DOM 契约的静态测试台
-│   ├── verify.py                # Playwright 验证脚本（48 项断言）
+│   ├── verify.py                # Playwright 验证脚本
 │   └── capture.py               # 演示素材采集脚本
 ├── docs/
 │   ├── assets/                  # 截图与 GIF
@@ -207,9 +179,9 @@ dsh-sticky-disclosure/
 
 ## 原理
 
-- 宿主侧 `dsh-client-modules` 扫描 Loader 条目中声明了 `dsh.client.platform === "web"` 的包，把 `exports["./client"]` 指向的构建产物以 `/plugins/<id>/client.js` 提供给浏览器，并注入 `window.__DSH_BOOT__` 入口图。
+- 宿主侧 `dsh-client-modules` 扫描 Loader 条目中声明了 `dsh.client.platform === "web"` 的包，把 `exports["./client"]` 指向的构建产物以 `plugins/??<id>/client.js&rev=<rev>` 提供给浏览器，并注入 `window.__DSH_BOOT__` 入口图。
 - 浏览器侧 bundle 通过 `window.__ModuleLoader__.load({ id, factory })` 注册模块，导出 cordis 插件（`name`/`apply`），由 Web shell 的 Loader 激活。
-- 插件本体是纯 DOM 层：不动应用代码，只读 `data-open` / `data-disclosure-row` 契约并向原标题行派发 `click`，因此与应用升级/主题/语言无关。
+- 插件本体是纯 DOM 层：不动应用代码，只读 `data-open` / `data-disclosure-row` 契约并向原标题行派发 `click`，使用应用自己的状态切换逻辑；DOM 改动时仍需适配。
 
 更多细节（管线、契约、状态模型、快捷键配置、遮挡设计）见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 

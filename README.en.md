@@ -7,9 +7,16 @@ English | [中文](README.md)
 
 ![Promo: collapse all expanded sections and pin off-screen Think labels](docs/assets/promo.webp)
 
-A DeepSeek Harness (DSH) Web client plugin: **collapse every expanded collapsible section in the conversation in one click** — `Think` reasoning rows, tool-call cards, command cards, context-injection rows, i.e. every `DisclosureRow` — via an always-visible pill with a live count and a **customizable hotkey**. When an expanded section scrolls off the top, its header is pinned to the top of the conversation so you can still collapse it.
+A DeepSeek Harness (DSH) Desktop and Web plugin: **collapse expanded conversation sections in one click**, including Think, tool cards and turn-process groups. A persistent button shows the expanded count, and the shortcut is customizable. Off-screen headers remain accessible as pinned buttons.
 
 ![Pinning diagram: off-screen Think labels are pinned to the top](docs/assets/pinning-diagram.webp)
+
+## Recent improvements
+
+- Supports the turn-process buttons in DSH 0.2.0-rc.2 alongside Think and tool cards.
+- Chinese/English UI and the correct `⌘⌥C` default on macOS.
+- Closing settings or switching sessions stops shortcut capture; IME composition is ignored.
+- Escape dismissal, focus restoration and Desktop `no-drag` surfaces.
 
 ## ✨ Features
 
@@ -76,78 +83,42 @@ window.dshStickyDisclosure.hotkey()                                             
 
 ## Install
 
-> Requires: Node.js ≥ 20 + DeepSeek Harness (a version with the `dsh plugin` command; `npm install -g @deepseek-ai/dsh`). The plugin activates with `dsh web`.
+**Desktop (DSH 0.2.0-rc.2):** open **Plugins → Add plugin** in the sidebar, paste the following source, install it, then choose **Enable now**. Follow DSH's restart prompt if shown.
 
-### Option 0: one-click (recommended, no clone needed)
+```text
+github:Han-1413141/dsh-sticky-disclosure
+```
 
-**PowerShell one-click script** (copy the whole line and paste; pnpm is provisioned automatically, git is auto-detected):
+Desktop includes Node and pnpm. For terminal installation, first install the bundled command through **Manage dsh command** in the application menu. Open Desktop once to initialize its profile, fully quit it, and run:
+
+```bash
+dsh plugin --profile desktop add github:Han-1413141/dsh-sticky-disclosure
+```
+
+Then reopen Desktop. **Web** uses a separate profile:
+
+```bash
+dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure
+dsh web
+```
+
+The standalone CLI follows DSH's Node requirement: `^22.19.0 || >=24.0.0` for the version checked here. Desktop's bundled command needs no separate Node or pnpm installation.
+
+PowerShell installer (automatically selects `desktop` for the bundled command, otherwise `web`):
 
 ```powershell
 irm https://raw.githubusercontent.com/Han-1413141/dsh-sticky-disclosure/main/install.ps1 | iex
 ```
 
-**Or a plain command line** (machine must already have pnpm and git):
+To select a profile explicitly, download `install.ps1` and run `./install.ps1 -Profile desktop` or `-Profile web`. Without Git, use `https://github.com/Han-1413141/dsh-sticky-disclosure/archive/refs/heads/main.tar.gz` as the source.
 
 ```bash
-dsh plugin --profile web add github:Han-1413141/dsh-sticky-disclosure
+# Replace desktop with web for a Web installation.
+dsh plugin --profile desktop update dsh-sticky-disclosure
+dsh plugin --profile desktop remove dsh-sticky-disclosure
 ```
 
-Without git, use the GitHub archive tarball (update by remove-then-add):
-
-```bash
-dsh plugin --profile web add https://github.com/Han-1413141/dsh-sticky-disclosure/archive/refs/heads/main.tar.gz
-```
-
-### Option 1: local development (`dsh plugin` + symlink)
-
-From this repository's **parent directory** (relative paths get anchored to the invoking directory):
-
-```bash
-git clone https://github.com/Han-1413141/dsh-sticky-disclosure.git
-cd <parent of the clone>
-# symlink; edit lib/client.js, refresh the page, done:
-dsh plugin --profile web add link:./dsh-sticky-disclosure
-# or a fixed install:
-# dsh plugin --profile web add file:./dsh-sticky-disclosure
-```
-
-### Option 2: manual (no pnpm)
-
-1. In `<DSH_HOME>\profiles\web\package.json` (default `%USERPROFILE%\.dsh\profiles\web\package.json`):
-   - add `"dsh-sticky-disclosure": "link:<absolute path of this repo>"` to `dependencies`
-   - append `"dsh-sticky-disclosure"` to `dsh.profile.bundles`
-2. Create a directory junction in the profile's node_modules (the same shape a pnpm `link:` dependency leaves behind):
-   ```powershell
-   New-Item -ItemType Junction `
-     -Path "$env:USERPROFILE\.dsh\profiles\web\node_modules\dsh-sticky-disclosure" `
-     -Target "<absolute path of this repo>"
-   ```
-
-### Activate
-
-Plugin-set changes take effect on **restart** (a running server keeps its old graph). **The bundle itself is served `no-cache`**: after editing `lib/client.js`, a page refresh (Ctrl+F5) is enough to pick up the new code — no server restart needed.
-
-```bash
-# after the initial install: stop the current dsh web, then start it again
-dsh web
-```
-
-Verify it entered the plugin graph (expect `id: sticky-disclosure` and `name: dsh-sticky-disclosure`):
-
-```bash
-dsh --profile web --dump-config | findstr sticky-disclosure
-```
-
-On the page, the "collapse all" pill at the bottom-right of the chat area means the plugin is active.
-
-### Update / Uninstall
-
-```bash
-dsh plugin --profile web update dsh-sticky-disclosure  # update to the latest commit (git form; or re-run the one-click script)
-dsh plugin --profile web remove dsh-sticky-disclosure  # uninstall
-```
-
-Manual: remove the entries from `package.json` (`dependencies`/`bundles`) and delete the `profiles\web\node_modules\dsh-sticky-disclosure` junction, then restart `dsh web`.
+Layout/shortcut preferences belong to the browser origin: Desktop and Web keep separate preferences. Compatibility details and verification limits are in [COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 ## Tuning
 
@@ -164,13 +135,14 @@ All behavior parameters live in the constants block at the top of `lib/client.js
 ## Tests
 
 ```bash
-python test/verify.py   # needs Python 3 + playwright (python -m playwright install chromium)
+python -X utf8 test/verify.py
+python -X utf8 test/verify_compat.py   # needs Python 3 + playwright (python -m playwright install chromium)
 ```
 
 `test/` contains:
 
 - `mock.html` — a static harness reproducing the DSH DOM contract (`DisclosureRow` structure + the `[data-conversation-scroll]` scrollport);
-- `verify.py` — a Playwright verification script (48 assertions);
+- `verify.py` — a Playwright verification script ;
 - `capture.py` — a script that captures the demo screenshots/GIF against a live instance.
 
 Coverage: pill presence and count, one-click collapse-all (visible sections and input-focused scenarios), **custom hotkey** (settings popover, capture, Esc cancel, persistence across reload, reset to default, invalid-spec rejection), automatic state sync, composer exclusion, and full disposal.
@@ -197,7 +169,7 @@ dsh-sticky-disclosure/
 │   └── client.js                # browser half: self-contained bundle (__ModuleLoader__ handoff)
 ├── test/
 │   ├── mock.html                # static harness reproducing the DSH DOM contract
-│   ├── verify.py                # Playwright verification script (48 assertions)
+│   ├── verify.py                # Playwright verification script
 │   └── capture.py               # demo asset capture script
 ├── docs/
 │   ├── assets/                  # screenshots and GIF
@@ -208,9 +180,9 @@ dsh-sticky-disclosure/
 
 ## How it works
 
-- Host side: `dsh-client-modules` scans Loader entries whose manifest declares `dsh.client.platform === "web"`, serves the built `exports["./client"]` artifact at `/plugins/<id>/client.js`, and injects the `window.__DSH_BOOT__` entry graph.
+- Host side: `dsh-client-modules` scans Loader entries whose manifest declares `dsh.client.platform === "web"`, serves the built `exports["./client"]` artifact at `plugins/??<id>/client.js&rev=<rev>`, and injects the `window.__DSH_BOOT__` entry graph.
 - Browser side: the bundle registers a module via `window.__ModuleLoader__.load({ id, factory })`, exports a cordis plugin (`name`/`apply`), and the Web shell's Loader activates it.
-- The plugin body is pure DOM: it touches no app code — it reads the `data-open` / `data-disclosure-row` contract and dispatches clicks at the original headers, so it survives app upgrades, themes, and locales.
+- The plugin body is pure DOM: it touches no app code — it reads the `data-open` / `data-disclosure-row` contract and dispatches clicks at the original headers, preserving app-owned state; upstream DOM changes still require adaptation.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full pipeline, contracts, state model, hotkey configuration, and stacking design.
 

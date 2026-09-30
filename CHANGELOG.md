@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Support current turn-process disclosures in addition to DisclosureRow controls.
+- Add Chinese/English UI and correct the macOS default shortcut.
+- Stop capture listeners when settings close or sessions disappear; ignore IME/repeat input during capture.
+- Add keyboard dismissal, focus restoration and Desktop no-drag surfaces.
+- Add Desktop-aware PowerShell installation, current runtime smoke checks, and Web/Windows/macOS marker regressions.
+- Document DSH 0.2.0-rc.2 compatibility and add localized plugin-manager metadata.
+
 ## [1.0.1] - 2026-08-14
 
 ### Added
